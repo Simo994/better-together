@@ -1,0 +1,105 @@
+:root {
+    --primary-color: #00D29D;
+    --secondary-color: #E5F9F4;
+    --text-color: #333333;
+}
+
+/* Общие стили */
+body {
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+}
+
+.card {
+    border-radius: 12px;
+    border: 1px solid #E0E0E0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #00B589;
+    border-color: #00B589;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Мобильная версия (до 720px) */
+@media (max-width: 720px) {
+    .desktop-only {
+        display: none;
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .category-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .category-item {
+        background-color: var(--secondary-color);
+        color: var(--primary-color);
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 14px;
+    }
+}
+
+/* Десктопная версия (от 1200px) */
+@media (min-width: 1200px) {
+    .mobile-only {
+        display: none;
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    .container {
+        max-width: 1200px;
+        padding: 32px;
+    }
+}
+
+/* Планшетная версия (между 720px и 1200px) */
+@media (min-width: 721px) and (max-width: 1199px) {
+    .mobile-only {
+        display: none;
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .container {
+        padding: 24px;
+    }
+}

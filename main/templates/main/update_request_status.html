@@ -1,0 +1,119 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Обновление статуса заявки</h2>
+                
+                <!-- Информация о заявке -->
+                <div class="mb-4">
+                    <h5>{{ request.title }}</h5>
+                    <p>{{ request.description }}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Фото ДО</h6>
+                                    <img src="{{ request.image_before.url }}" class="img-fluid" alt="Фото ДО">
+                                </div>
+                            </div>
+                        </div>
+                        {% if request.image_after %}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Фото ПОСЛЕ</h6>
+                                    <img src="{{ request.image_after.url }}" class="img-fluid" alt="Фото ПОСЛЕ">
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Форма обновления статуса -->
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div id="imagePreview" class="mt-2 mb-3 d-none">
+                        <h6>Предпросмотр нового фото</h6>
+                        <img src="" class="img-fluid" alt="Предпросмотр">
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Обновить статус</button>
+                        <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const statusSelect = document.querySelector('select[name="status"]');
+        const imageAfterField = document.querySelector('input[name="image_after"]');
+        const rejectionReasonField = document.querySelector('textarea[name="rejection_reason"]');
+        const imagePreview = document.getElementById('imagePreview');
+        
+        // Управление видимостью полей в зависимости от статуса
+        function updateFieldsVisibility() {
+            const status = statusSelect.value;
+            
+            // Поле для фото "после"
+            if (status === 'solved') {
+                imageAfterField.closest('.mb-3').style.display = 'block';
+                imageAfterField.required = true;
+            } else {
+                imageAfterField.closest('.mb-3').style.display = 'none';
+                imageAfterField.required = false;
+            }
+            
+            // Поле для причины отказа
+            if (status === 'rejected') {
+                rejectionReasonField.closest('.mb-3').style.display = 'block';
+                rejectionReasonField.required = true;
+            } else {
+                rejectionReasonField.closest('.mb-3').style.display = 'none';
+                rejectionReasonField.required = false;
+            }
+        }
+        
+        // Предпросмотр изображения
+        imageAfterField.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.querySelector('img').src = e.target.result;
+                    imagePreview.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.classList.add('d-none');
+            }
+        });
+        
+        // Валидация формы
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+        
+        // Инициализация и обработка изменений
+        statusSelect.addEventListener('change', updateFieldsVisibility);
+        updateFieldsVisibility();
+    });
+</script>
+{% endblock %}
+{% endblock %}

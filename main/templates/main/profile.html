@@ -1,0 +1,159 @@
+[14/Feb/2025 23:34:29] "GET /static/main/logo.png HTTP/1.1" 404 1798
+[14/Feb/2025 23:34:29] "GET /static/main/notif.mp3 HTTP/1.1" 404 1801
+[14/Feb/2025 23:34:43] "GET /profile/ HTTP/1.1" 200 9127
+[14/Feb/2025 23:34:43] "GET /static/main/logo.png HTTP/1.1" 404 1798
+[14/Feb/2025 23:34:43] "GET /static/main/notif.mp3 HTTP/1.1" 404 1801
+[14/Feb/2025 23:34:45] "GET /create-request/ HTTP/1.1" 200 9561
+[14/Feb/2025 23:34:45] "GET /static/main/logo.png HTTP/1.1" 404 1798
+[14/Feb/2025 23:34:45] "GET /static/main/notif.mp3 HTTP/1.1" 404 1801
+[14/Feb/2025 23:34:47] "GET /profile/ HTTP/1.1" 200 9127
+[14/Feb/2025 23:34:47] "GET /static/main/logo.png HTTP/1.1" 404 1798
+[14/Feb/2025 23:34:47] "GET /static/main/notif.mp3 HTTP/1.1" 404 1801
+[14/Feb/2025 23:34:49] "GET / HTTP/1.1" 200 6440
+[14/Feb/2025 23:34:49] "GET /static/main/slide2.jpg HTTP/1.1" 404 1804
+[14/Feb/2025 23:34:49] "GET /static/main/logo.png HTTP/1.1" 404 1798
+[14/Feb/2025 23:34:49] "GET /static/main/slide3.jpg HTTP/1.1" 404 1804
+[14/Feb/2025 23:34:49] "GET /static/main/slide1.jpg HTTP/1.1" 404 1804
+[14/Feb/2025 23:34:49] "GET /static/main/notif.mp3 HTTP/1.1" 404 1801
+[14/Feb/2025 23:34:54] "GET /api/solved-count/ HTTP/1.1" 200 12
+[14/Feb/2025 23:35:00] "GET /api/solved-count/ HTTP/1.1" 200 12
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Мои заявки</h2>
+            <a href="{% url 'create_request' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Создать заявку
+            </a>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="row">
+            {% for request in requests %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card request-card h-100">
+                    <div class="position-relative">
+                        <img src="{{ request.image_before.url }}" class="card-img-top" alt="Фото ДО">
+                        {% if request.status == 'new' %}
+                            <span class="badge bg-primary status-badge">Новая</span>
+                        {% elif request.status == 'solved' %}
+                            <span class="badge bg-success status-badge">Решена</span>
+                        {% else %}
+                            <span class="badge bg-danger status-badge">Отклонена</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ request.title }}</h5>
+                        <p class="card-text">{{ request.description|truncatewords:30 }}</p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                <i class="fas fa-folder"></i> {{ request.category.name }}<br>
+                                <i class="fas fa-calendar"></i> {{ request.created_at|date:"d.m.Y" }}
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        {% if request.status == 'new' %}
+                            <button class="btn btn-danger btn-sm" 
+                                    onclick="confirmDelete({{ request.id }})"
+                                    {% if request.status != 'new' %}disabled{% endif %}>
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        {% elif request.status == 'solved' and request.image_after %}
+                            <button class="btn btn-success btn-sm" onclick="showAfterImage('{{ request.image_after.url }}')">
+                                <i class="fas fa-image"></i> Посмотреть результат
+                            </button>
+                        {% elif request.status == 'rejected' and request.rejection_reason %}
+                            <button class="btn btn-info btn-sm" onclick="showRejectionReason('{{ request.rejection_reason }}')">
+                                <i class="fas fa-info-circle"></i> Причина отказа
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    У вас пока нет заявок. <a href="{% url 'create_request' %}">Создать первую заявку</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить эту заявку?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра фото "После" -->
+<div class="modal fade" id="afterImageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Результат решения</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <img src="" id="afterImage" class="img-fluid" alt="Фото ПОСЛЕ">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра причины отказа -->
+<div class="modal fade" id="rejectionReasonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Причина отказа</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="rejectionReason"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const afterImageModal = new bootstrap.Modal(document.getElementById('afterImageModal'));
+    const rejectionReasonModal = new bootstrap.Modal(document.getElementById('rejectionReasonModal'));
+    
+    function confirmDelete(requestId) {
+        document.getElementById('confirmDeleteBtn').href = `/delete-request/${requestId}/`;
+        deleteModal.show();
+    }
+    
+    function showAfterImage(imageUrl) {
+        document.getElementById('afterImage').src = imageUrl;
+        afterImageModal.show();
+    }
+    
+    function showRejectionReason(reason) {
+        document.getElementById('rejectionReason').textContent = reason;
+        rejectionReasonModal.show();
+    }
+</script>
+{% endblock %}
+{% endblock %}
