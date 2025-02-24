@@ -27,7 +27,7 @@
                                 <div class="card-body">
                                     <h5 class="card-title">{{ category.name }}</h5>
                                     <p class="card-text">
-                                        <span class="badge bg-primary">{{ category.request_count }} заявок</span>
+                                        
                                     </p>
                                     <form method="post" action="{% url 'manage_categories' %}" class="mt-2">
                                         {% csrf_token %}
