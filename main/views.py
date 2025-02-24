@@ -10,7 +10,7 @@ from django.http import JsonResponse
 def index(request):
     solved_count = Request.objects.filter(status='solved').count()
     categories = Category.objects.annotate(request_count=Count('request'))
-    latest_requests = Request.objects.select_related('category').order_by('-created_at')[:4]
+    latest_requests = Request.objects.select_related('category').filter(status='solved').order_by('-created_at')[:4]
     return render(request, 'main/index.html', {
         'solved_count': solved_count,
         'categories': categories,
